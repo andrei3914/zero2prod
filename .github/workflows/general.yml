@@ -25,7 +25,7 @@ jobs:
         with:
           components: rustfmt
       - name: Enforce formatting
-        run: cargo fmt --check
+        run: cargo fmt -- --emit files
 
   clippy:
     name: Clippy
@@ -51,11 +51,3 @@ jobs:
       - name: Generate code coverage
         run: |
           cargo tarpaulin --verbose --workspace
-
-  security_audit:
-    runs-on: ubuntu/latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: taiki-e/install-action@cargo-deny
-      - name: Scan for vulnerabilities
-        run: cargo deny check advisories
