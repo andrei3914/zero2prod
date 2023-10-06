@@ -104,7 +104,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
-      - name: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
         with:
           key: sqlx-${{ env.SQLX_VERSION }}
       - name: Install sqlx-cli
