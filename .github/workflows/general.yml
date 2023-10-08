@@ -104,10 +104,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install sudo and add user to sudo group
+        run:
+          - apt install sudo && usermod -aG sudo $(whoami)
       - name: Install postgresql-client
         run: 
-          - apt install sudo
-          - usermod -aG sudo $(whoami)
           - sudo apt-get update && sudo apt-get install postgresql-client -y
       - uses: Swatinem/rust-cache@v2
         with:
