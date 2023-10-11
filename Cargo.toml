@@ -35,5 +35,6 @@ default-features = false
 features = ["runtime-actix-rustls", "macros", "postgres", "uuid", "chrono", "migrate", "offline"]
 
 [dev-dependencies]
+claim = "0.5"
 reqwest = "0.11.21"
 
