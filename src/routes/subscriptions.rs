@@ -44,7 +44,8 @@ pub async fn subscribe(
 
     if insert_subscriber(&pool, &new_subscriber).await.is_err() {
         return HttpResponse::InternalServerError().finish();
-    } else if email_client
+    } 
+    if email_client
         .send_email(
             new_subscriber.email,
             "Welcome",
