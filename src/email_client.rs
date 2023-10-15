@@ -3,6 +3,7 @@ use reqwest::{Client, Url};
 use secrecy::{ExposeSecret, Secret};
 use serde::Serialize;
 
+#[derive(Debug)]
 pub struct EmailClient {
     http_client: Client,
     base_url: reqwest::Url,
