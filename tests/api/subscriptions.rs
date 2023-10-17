@@ -100,7 +100,7 @@ async fn subscribe_sends_a_confirmation_email_for_valid_data() {
     app.post_subscriptions(body.into()).await;
 
     let email_request = &app.email_server.received_requests().await.unwrap()[0];
-    let confirmation_links = app.get_confirmation_links(email_request);
+    let confirmation_links = app.get_confirmation_links(&email_request);
 
     assert_eq!(confirmation_links.html, confirmation_links.plain_text)
 }
