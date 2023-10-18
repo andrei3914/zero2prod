@@ -18,12 +18,41 @@ pub async fn confirm(parameters: web::Query<Parameters>, pool: web::Data<PgPool>
     match id {
         None => HttpResponse::Unauthorized().finish(),
         Some(subscriber_id) => {
+            let status = match check_subscriber_already_confirmed(&pool, subscriber_id).await {
+                Ok(status) => status,
+                Err(_) => return HttpResponse::InternalServerError().finish(),
+            };
+            if status == "confirmed" {
+                return HttpResponse::Conflict().finish();
+            }
+
             if confirm_subscriber(&pool, subscriber_id).await.is_err() {
                 return HttpResponse::InternalServerError().finish();
             }
             HttpResponse::Ok().finish()
         }
     }
+}
+
+#[tracing::instrument(
+    name = "Check if subscriber already confirmed the subscription",
+    skip(pool, subscriber_id)
+)]
+pub async fn check_subscriber_already_confirmed(
+    pool: &PgPool,
+    subscriber_id: Uuid,
+) -> Result<String, sqlx::Error> {
+    let result = sqlx::query!(
+        r#"SELECT status FROM subscriptions WHERE id = $1"#,
+        subscriber_id
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
+    })?;
+    Ok(result.status)
 }
 
 #[tracing::instrument(name = "Get subscriber id from token", skip(subscription_token, pool))]
@@ -44,6 +73,7 @@ pub async fn get_subscriber_id_from_token(
     Ok(result.map(|r| r.subscriber_id))
 }
 
+#[tracing::instrument(name = "Confirm subscriber", skip(pool, subscriber_id))]
 pub async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"UPDATE subscriptions SET status='confirmed' WHERE id = $1"#,
