@@ -1,3 +1,4 @@
+use crate::helpers::is_valid_input_string;
 use actix_web::{web, HttpResponse};
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -10,6 +11,11 @@ pub struct Parameters {
 
 #[tracing::instrument(name = "Confirm a pending subscriber", skip(parameters, pool))]
 pub async fn confirm(parameters: web::Query<Parameters>, pool: web::Data<PgPool>) -> HttpResponse {
+    let token = &parameters.subscription_token;
+    if !is_valid_input_string(token, 25) {
+        return HttpResponse::BadRequest().finish();
+    }
+
     let id = match get_subscriber_id_from_token(&pool, &parameters.subscription_token).await {
         Ok(id) => id,
         Err(_) => return HttpResponse::InternalServerError().finish(),

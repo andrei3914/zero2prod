@@ -1,18 +1,11 @@
-use unicode_segmentation::UnicodeSegmentation;
+use crate::helpers::is_valid_input_string;
 
 #[derive(Debug)]
 pub struct SubscriberName(String);
 
 impl SubscriberName {
     pub fn parse(s: String) -> Result<SubscriberName, String> {
-        let is_empty_or_whitespace = s.trim().is_empty();
-
-        let is_too_long = s.graphemes(true).count() > 256;
-
-        let forbidden_chars = ['/', '(', ')', '"', '<', '>', '\\', '{', '}'];
-        let contains_forbidden_chars = s.chars().any(|g| forbidden_chars.contains(&g));
-
-        if is_empty_or_whitespace || is_too_long || contains_forbidden_chars {
+        if !is_valid_input_string(&s, 256) {
             Err(format!("{} is not a valid subscriber name.", s))
         } else {
             Ok(Self(s))

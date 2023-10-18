@@ -14,6 +14,29 @@ async fn confirmations_without_token_are_rejected_with_a_400() {
 }
 
 #[tokio::test]
+async fn confirmations_with_invalid_tokens_are_rejected_with_a_400() {
+    let app = spawn_app().await;
+    let another_invalid_token = "2".repeat(26);
+    let invalid_tokens = vec![
+        "<p>Hello from the other side!</p>",
+        "",
+        ":?//\\",
+        &another_invalid_token,
+    ];
+
+    for invalid_token in invalid_tokens {
+        let response = reqwest::get(&format!(
+            "{}/subscriptions/confirm?subscription_token={}",
+            app.address, invalid_token
+        ))
+        .await
+        .unwrap();
+
+        assert_eq!(response.status().as_u16(), 400);
+    }
+}
+
+#[tokio::test]
 async fn the_link_returned_by_subscribe_returns_a_200_if_called() {
     let app = spawn_app().await;
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
