@@ -1,5 +1,8 @@
 use crate::helpers::is_valid_input_string;
+use crate::routes::error_chain_fmt;
+use actix_web::{http::StatusCode, ResponseError};
 use actix_web::{web, HttpResponse};
+use anyhow::Context;
 use serde::Deserialize;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -9,35 +12,56 @@ pub struct Parameters {
     subscription_token: String,
 }
 
-#[tracing::instrument(name = "Confirm a pending subscriber", skip(parameters, pool))]
-pub async fn confirm(parameters: web::Query<Parameters>, pool: web::Data<PgPool>) -> HttpResponse {
-    let token = &parameters.subscription_token;
-    if !is_valid_input_string(token, 25) {
-        return HttpResponse::BadRequest().finish();
+#[derive(thiserror::Error)]
+pub enum ConfirmationError {
+    #[error(transparent)]
+    UnexpectedError(#[from] anyhow::Error),
+    #[error("There is no subscriber associated with the provided token.")]
+    UnknownToken,
+}
+
+impl std::fmt::Debug for ConfirmationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        error_chain_fmt(self, f)
     }
+}
 
-    let id = match get_subscriber_id_from_token(&pool, &parameters.subscription_token).await {
-        Ok(id) => id,
-        Err(_) => return HttpResponse::InternalServerError().finish(),
-    };
-
-    match id {
-        None => HttpResponse::Unauthorized().finish(),
-        Some(subscriber_id) => {
-            let status = match check_subscriber_already_confirmed(&pool, subscriber_id).await {
-                Ok(status) => status,
-                Err(_) => return HttpResponse::InternalServerError().finish(),
-            };
-            if status == "confirmed" {
-                return HttpResponse::Conflict().finish();
-            }
-
-            if confirm_subscriber(&pool, subscriber_id).await.is_err() {
-                return HttpResponse::InternalServerError().finish();
-            }
-            HttpResponse::Ok().finish()
+impl ResponseError for ConfirmationError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            Self::UnknownToken => StatusCode::UNAUTHORIZED,
+            Self::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
+}
+
+#[tracing::instrument(name = "Confirm a pending subscriber", skip(parameters, pool))]
+pub async fn confirm(
+    parameters: web::Query<Parameters>,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, ConfirmationError> {
+    let token = &parameters.subscription_token;
+    if !is_valid_input_string(token, 25) {
+        return Ok(HttpResponse::BadRequest().finish());
+    }
+
+    let subscriber_id = get_subscriber_id_from_token(&pool, token)
+        .await
+        .context("Failed to retrieve the subscriber id associated with the provided token.")?
+        .ok_or(ConfirmationError::UnknownToken)?;
+
+    let status = check_subscriber_already_confirmed(&pool, subscriber_id)
+        .await
+        .context("Failed to retrieve subscriber status.")?;
+    if status == "confirmed" {
+        return Ok(HttpResponse::Conflict().finish());
+    }
+
+    confirm_subscriber(&pool, subscriber_id)
+        .await
+        .context("Failed to update the subscriber status to `confirmed`.")?;
+
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[tracing::instrument(
@@ -53,11 +77,7 @@ pub async fn check_subscriber_already_confirmed(
         subscriber_id
     )
     .fetch_one(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+    .await?;
     Ok(result.status)
 }
 
@@ -71,11 +91,7 @@ pub async fn get_subscriber_id_from_token(
         subscription_token
     )
     .fetch_optional(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+    .await?;
     Ok(result.map(|r| r.subscriber_id))
 }
 
@@ -86,10 +102,6 @@ pub async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<()
         subscriber_id
     )
     .execute(pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+    .await?;
     Ok(())
 }
