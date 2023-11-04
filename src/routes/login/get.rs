@@ -1,5 +1,7 @@
-use actix_web::{HttpResponse, http::header::ContentType};
+use actix_web::{http::header::ContentType, HttpResponse};
 
 pub async fn login_form() -> HttpResponse {
-    HttpResponse::Ok().content_type(ContentType::html()).body(include_str!("login.html"))
+    HttpResponse::Ok()
+        .content_type(ContentType::html())
+        .body(include_str!("login.html"))
 }
