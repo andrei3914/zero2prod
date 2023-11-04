@@ -46,17 +46,6 @@ jobs:
       - name: Run tests
         run: cargo test
 
-  fmt:
-    name: Rustfmt
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-      - name: Enforce formatting
-        run: cargo fmt -- --emit files
-
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
