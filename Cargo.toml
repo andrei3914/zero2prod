@@ -37,6 +37,12 @@ base64 = "0.13"
 argon2 = { version = "0.3", features = ["std"] }
 urlencoding = "2"
 htmlescape = "0.3"
+actix-web-flash-messages = { version = "0.3", features = ["cookies"] }
+
+[dependencies.actix-session]
+git = "https://github.com/actix/actix-extras"
+branch = "master"
+features = ["redis-rs-tls-session"]
 
 [dependencies.sqlx]
 version = "0.5.7"
