@@ -9,8 +9,6 @@ env:
   CARGO_TERM_COLOR: always
   SQLX_VERSION: 0.7.1
   SQLX_FEATURES: "rustls,postgres"
-  POSTGRES_IMG: postgres:latest
-  REDIS_IMG: redis:latest
 
 jobs:
   test:
@@ -18,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: ${{ env.POSTGRES_IMG }}
+        image: postgres:latest
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -26,7 +24,7 @@ jobs:
         ports:
           - 5432:5432
       redis:
-        image: ${{ env.REDIS_IMG }}
+        image: redis:latest
         ports:
           - 6379:6379
     steps:
@@ -57,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: ${{ env.POSTGRES_IMG }}
+        image: postgres:latest
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -91,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: ${{ env.POSTGRES_IMG }}
+        image: postgres:latest
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -99,7 +97,7 @@ jobs:
         ports:
           - 5432:5432
       redis:
-        image: ${{ env.REDIS_IMG }}
+        image: redis:latest
         ports:
           - 6379:6379
     steps:
