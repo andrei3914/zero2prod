@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: $POSTGRES_IMG
+        image: ${{ env.POSTGRES_IMG }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -26,7 +26,7 @@ jobs:
         ports:
           - 5432:5432
       redis:
-        image: $REDIS_IMG
+        image: ${{ env.REDIS_IMG }}
         ports:
           - 6379:6379
     steps:
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: $POSTGRES_IMG
+        image: ${{ env.POSTGRES_IMG }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: $POSTGRES_IMG
+        image: ${{ env.POSTGRES_IMG }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -99,7 +99,7 @@ jobs:
         ports:
           - 5432:5432
       redis:
-        image: $REDIS_IMG
+        image: ${{ env.REDIS_IMG }}
         ports:
           - 6379:6379
     steps:
