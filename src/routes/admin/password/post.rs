@@ -41,7 +41,7 @@ pub async fn change_password(
     };
     if let Err(e) = validate_credentials(credentials, &pool).await {
         return match e {
-            AuthError::UnexpectedError(_) => Err(e500(e).into()),
+            AuthError::UnexpectedError(_) => Err(e500(e)),
             AuthError::InvalidCredentials(_) => {
                 FlashMessage::error("The current password is incorrect.").send();
                 Ok(see_other("/admin/password"))
@@ -55,5 +55,10 @@ pub async fn change_password(
             .send();
         return Ok(see_other("/admin/password"));
     }
-    todo!()
+
+    crate::authentication::change_password(user_id, form.0.new_password, &pool)
+        .await
+        .map_err(e500)?;
+    FlashMessage::error("Your password has been changed.").send();
+    Ok(see_other("/admin/password"))
 }
